@@ -12,6 +12,7 @@ the tests.py again to recreate it.
 import sqlite3
 import os
 from flask import Flask, request
+import re
 
 ### Unrelated to the exercise -- Starts here -- Please ignore
 app = Flask(__name__)
@@ -123,6 +124,13 @@ class DB_CRUD_ops(object):
     # Example: get_stock_price('MSFT') will result into executing
     # SELECT price FROM stocks WHERE symbol = 'MSFT'
     def get_stock_price(self, stock_symbol):
+
+        match = re.match(r'[A-Z]+', stock_symbol)
+        if match:
+            stock_symbol = match.group(0)
+        else:
+            raise ValueError("Invalid stock symbol format")  
+
         # building database from scratch as it is more suitable for the purpose of the lab
         db = Create()
         con = Connect()
