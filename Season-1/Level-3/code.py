@@ -21,35 +21,42 @@ class TaxPayer:
         self.prof_picture = None
         self.tax_form_attachment = None
 
+    def sanitize_path(self, path):
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        full_path = os.path.realpath(os.path.join(base_dir, path))
+        if not full_path.startswith(base_dir):
+            return None
+        return full_path
+
     # returns the path of an optional profile picture that users can set
     def get_prof_picture(self, path=None):
         # setting a profile picture is optional
         if not path:
-            pass
-
-        # defends against path traversal attacks
-        if path.startswith('/') or path.startswith('..'):
             return None
 
-        # builds path
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        prof_picture_path = os.path.normpath(os.path.join(base_dir, path))
+        # defends against path traversal attacks
+        full_path = self.sanitize_path(path)
+        if full_path is None:
+            return None
 
-        with open(prof_picture_path, 'rb') as pic:
-            picture = bytearray(pic.read())
-
-        # assume that image is returned on screen after this
-        return prof_picture_path
-
+        try:
+            with open(full_path, 'rb') as pic:
+                picture = bytearray(pic.read())
+            return full_path
+        except (FileNotFoundError, IOError):
+            return None
     # returns the path of an attached tax form that every user should submit
     def get_tax_form_attachment(self, path=None):
-        tax_data = None
-
         if not path:
             raise Exception("Error: Tax form is required for all users")
 
-        with open(path, 'rb') as form:
-            tax_data = bytearray(form.read())
+        full_path = self.sanitize_path(path)
+        if full_path is None:
+            return None
 
-        # assume that tax data is returned on screen after this
-        return path
+        try:
+            with open(full_path, 'rb') as form:
+                tax_data = bytearray(form.read())
+            return full_path
+        except (FileNotFoundError, IOError):
+            return None
